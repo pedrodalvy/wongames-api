@@ -1,0 +1,16 @@
+version: '3'
+
+services:
+  postgres:
+    build: .docker/postgres
+    container_name: won-postgres
+    restart: on-failure
+    tty: true
+    ports:
+      - "5432:5432"
+    volumes:
+      - .docker/postgres/dbdata:/var/lib/postgresql/data
+    environment:
+      - POSTGRES_DB=won
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
