@@ -23,12 +23,54 @@ async function getGameInfo(slug) {
   }
 }
 
+async function getByName(name, entityName) {
+  return strapi.services[entityName].findOne({ name });
+}
+
+async function create(name, entityName) {
+  const item = await getByName(name, entityName);
+
+  if (!item) {
+    const slug = slugify(name, { lower: true });
+    return strapi.services[entityName].create({ name, slug });
+  }
+}
+
+async function createManyToManyData(products) {
+  const developers = {};
+  const publishers = {};
+  const categories = {};
+  const platforms = {};
+
+  products.forEach((product) => {
+    const { developer, publisher, genres, supportedOperatingSystems } = product;
+
+    developers[developer] = true;
+    publishers[publisher] = true;
+
+    genres && genres.forEach((genre) => {
+      categories[genre] = true;
+    });
+
+    supportedOperatingSystems && supportedOperatingSystems.forEach((platform) => {
+      platforms[platform] = true;
+    });
+  });
+
+  return Promise.all([
+    ...Object.keys(developers).map((name) => create(name, 'developer')),
+    ...Object.keys(publishers).map((name) => create(name, "publisher")),
+    ...Object.keys(categories).map((name) => create(name, "category")),
+    ...Object.keys(platforms).map((name) => create(name, "platform")),
+  ]);
+}
+
 module.exports = {
   populate: async (params) => {
     const gogApiUrl = `https://www.gog.com/games/ajax/filtered?mediaType=game&page=1&sort=popularity`;
 
     const { data: { products } } = await axios.get(gogApiUrl);
 
-    console.log(await getGameInfo(products[1].slug));
+    await createManyToManyData(products);
   }
 };
