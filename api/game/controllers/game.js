@@ -11,8 +11,6 @@ module.exports = {
 
     await strapi.services.game.populate();
 
-    console.log('Finished populating.');
-
     ctx.send();
   }
 };
